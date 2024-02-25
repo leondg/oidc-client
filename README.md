@@ -1,6 +1,8 @@
 # oidc-client
 
-This package provides OpenID Connect support based on The PHP League's OAuth 2.0 Client.
+This package provides OpenID Connect support based on The PHP League's OAuth 2.0 Client.  
+_Please note that this package is very basic and far from perfect_  
+_If you want to contribute or have suggestions you are welcome to provide them_
 
 ## Usage examples:
 ```php
