@@ -1,0 +1,21 @@
+{
+    "name": "leondg/oidc-client",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Léon de Groot",
+            "email": "leon90@outlook.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Leondg\\Oidc\\Client\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "league/oauth2-client": "^2.0",
+        "symfony/serializer": "^5.0 || ^6.0 || ^7.0",
+        "symfony/property-access": "^5.0 || ^6.0 || ^7.0"
+    }
+}
