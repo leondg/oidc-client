@@ -7,9 +7,16 @@ namespace Leondg\Oidc\Client\Provider;
 use League\OAuth2\Client\OptionProvider\HttpBasicAuthOptionProvider;
 use League\OAuth2\Client\OptionProvider\PostAuthOptionProvider;
 use League\OAuth2\Client\Provider\GenericProvider;
+use League\OAuth2\Client\Provider\GenericResourceOwner;
+use League\OAuth2\Client\Token\AccessToken;
 
 class OpenIDConnectProvider extends GenericProvider
 {
+    /**
+     * @var string
+     */
+    private $responseResourceOwnerId = 'sub';
+
     public function __construct(
         WellKnownConfig $config,
         string $clientId,
@@ -37,6 +44,14 @@ class OpenIDConnectProvider extends GenericProvider
         }
 
         return $collaborators;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function createResourceOwner(array $response, AccessToken $token)
+    {
+        return new OpenIDConnectResourceOwner($response, $this->responseResourceOwnerId);
     }
 
     private function createOptions(
