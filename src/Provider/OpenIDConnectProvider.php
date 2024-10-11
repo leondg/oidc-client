@@ -23,12 +23,13 @@ class OpenIDConnectProvider extends GenericProvider
         string $clientSecret,
         string $redirectUri,
         array $scopes,
-        string $pkceMethod = null
+        string $pkceMethod = null,
+        string $scopeSeparator = ' '
     ) {
         $this->redirectUri = $redirectUri;
 
         parent::__construct(
-            $this->createOptions($config, $clientId, $clientSecret, $scopes, $pkceMethod),
+            $this->createOptions($config, $clientId, $clientSecret, $scopes, $pkceMethod, $scopeSeparator),
             $this->createCollaborators($config)
         );
     }
@@ -59,7 +60,8 @@ class OpenIDConnectProvider extends GenericProvider
         string $clientId,
         string $clientSecret,
         array $scopes,
-        string $pkceMethod
+        string $pkceMethod,
+        string $scopeSeparator
     ): array {
         return [
             'clientId' => $clientId,
@@ -68,7 +70,8 @@ class OpenIDConnectProvider extends GenericProvider
             'urlAccessToken' => $config->getTokenEndpoint(),
             'urlResourceOwnerDetails' => $config->getUserinfoEndpoint(),
             'scopes' => $scopes,
-            'pkceMethod' => $pkceMethod
+            'pkceMethod' => $pkceMethod,
+            'scopeSeparator' => $scopeSeparator
         ];
     }
 }
