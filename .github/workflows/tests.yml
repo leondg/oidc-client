@@ -29,7 +29,9 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-progress
+        # Use --no-audit because firebase/php-jwt v6 is required for PHP 7.4 support
+        # but is currently flagged by security advisories.
+        run: composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-progress --no-audit
 
       - name: Execute tests
         run: composer test
