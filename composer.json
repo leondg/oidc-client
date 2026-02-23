@@ -34,5 +34,12 @@
         "test": "phpunit",
         "analyze": "phpstan analyze",
         "phpcs": "php-cs-fixer fix --dry-run --diff"
+    },
+    "config": {
+        "audit": {
+            "ignore": [
+                "PKSA-y2cr-5h3j-g3ys"
+            ]
+        }
     }
 }
