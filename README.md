@@ -9,9 +9,12 @@ A modern, robust OpenID Connect (OIDC) client for PHP, built on top of [The PHP 
 ## Features
 
 - **Automated Discovery:** Automatically fetch and parse OIDC configuration from `.well-known/openid-configuration`.
-- **PSR-16 Caching:** Built-in support for caching the discovery document to avoid redundant network requests.
-- **PKCE Support:** Easy configuration for Proof Key for Code Exchange (PKCE).
-- **Type-Safe:** Fully type-hinted and compatible with modern PHP versions (^7.4 || ^8.0).
+- **Full Specification Support:** Support for over 30 metadata fields including logout, introspection, and revocation.
+- **Secure ID Token Validation:** Built-in JWT verification using JWKS and standard claim checks (`iss`, `aud`, `exp`, `nonce`).
+- **PSR-16 Caching:** Seamlessly cache discovery documents to eliminate redundant network requests.
+- **PKCE & Nonce:** Native support for Proof Key for Code Exchange and Nonce to prevent replay attacks.
+- **Efficient Resource Owner:** Initialize user profiles directly from ID Token claims without extra UserInfo API calls.
+- **Type-Safe:** Fully type-hinted and compatible with PHP ^7.4 || ^8.0.
 - **Extensible:** Based on `GenericProvider`, allowing for custom collaborator injection.
 
 ## Installation
@@ -48,26 +51,44 @@ $provider = new OpenIDConnectProvider(
     $scopes
 );
 
-// 3. Get Authorization URL
-$authUrl = $provider->getAuthorizationUrl();
+// 3. Get Authorization URL (with Nonce)
+$nonce = bin2hex(random_bytes(16));
+$_SESSION['oidc_nonce'] = $nonce;
+
+$authUrl = $provider->getAuthorizationUrl([
+    'nonce' => $nonce
+]);
 ```
 
 ### Validating ID Tokens
 
-OIDC requires the validation of the ID Token (JWT) returned by the provider. This package handles signature verification (via JWKS) and standard claim checks (`iss`, `aud`, `exp`, `nonce`):
+OIDC requires the validation of the ID Token (JWT) returned by the provider. This package handles signature verification (via JWKS) and standard claim checks (`iss`, `aud`, `exp`, `nonce`). You can also provide a `leeway` (in seconds) to account for clock skew between servers:
 
 ```php
 try {
     $idToken = $_POST['id_token']; // Or from token response
-    $nonce = $_SESSION['oidc_nonce']; // Nonce used during authorization request
+    $nonce = $_SESSION['oidc_nonce']; 
     
-    $claims = $provider->validateIdToken($idToken, $nonce);
+    // Validate with 60 seconds leeway for clock skew
+    $claims = $provider->validateIdToken($idToken, $nonce, 60);
     
     echo "Welcome, " . $claims->sub;
 } catch (\Exception $e) {
     // Token is invalid
     die($e->getMessage());
 }
+```
+
+### Efficient Resource Owner Retrieval
+
+In OIDC, the ID Token often contains all the user information you need. You can initialize the `OpenIDConnectResourceOwner` directly from the validated claims, avoiding an unnecessary network request to the UserInfo endpoint:
+
+```php
+$claims = $provider->validateIdToken($idToken, $nonce);
+$user = $provider->getResourceOwnerFromIdToken($claims);
+
+echo $user->getEmail();
+echo $user->getName();
 ```
 
 ### Logout (RP-Initiated)

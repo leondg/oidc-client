@@ -39,6 +39,19 @@ class OpenIDConnectProvider extends GenericProvider
         );
     }
 
+    public function getAuthorizationUrl(array $options = []): string
+    {
+        $url = parent::getAuthorizationUrl($options);
+
+        if (isset($options['nonce'])) {
+            $query = parse_url($url, PHP_URL_QUERY);
+            $newQuery = $query ? $query . '&nonce=' . $options['nonce'] : 'nonce=' . $options['nonce'];
+            $url = str_replace($query, $newQuery, $url);
+        }
+
+        return $url;
+    }
+
     public function getLogoutUrl(array $options = []): string
     {
         $base = $this->config->getEndSessionEndpoint();
@@ -108,10 +121,11 @@ class OpenIDConnectProvider extends GenericProvider
      *
      * @param string $idToken The raw JWT ID Token.
      * @param string|null $nonce The nonce used during the authorization request (if any).
+     * @param int $leeway Clock skew tolerance in seconds.
      * @return object The decoded token claims.
      * @throws \Exception If the token is invalid or the provider configuration is missing required endpoints.
      */
-    public function validateIdToken(string $idToken, ?string $nonce = null): object
+    public function validateIdToken(string $idToken, ?string $nonce = null, int $leeway = 0): object
     {
         $jwksUri = $this->config->getJwksUri();
         if ($jwksUri === null) {
@@ -125,6 +139,10 @@ class OpenIDConnectProvider extends GenericProvider
 
         $jwks = $this->fetchJwks($jwksUri);
         $keys = JWK::parseKeySet($jwks);
+
+        if ($leeway > 0) {
+            JWT::$leeway = $leeway;
+        }
 
         $decoded = JWT::decode($idToken, $keys);
 
@@ -143,6 +161,17 @@ class OpenIDConnectProvider extends GenericProvider
         }
 
         return $decoded;
+    }
+
+    /**
+     * Creates a Resource Owner from the ID Token claims.
+     *
+     * @param object $claims The decoded ID Token claims.
+     * @return OpenIDConnectResourceOwner
+     */
+    public function getResourceOwnerFromIdToken(object $claims): OpenIDConnectResourceOwner
+    {
+        return new OpenIDConnectResourceOwner((array) $claims, $this->responseResourceOwnerId);
     }
 
     /**
